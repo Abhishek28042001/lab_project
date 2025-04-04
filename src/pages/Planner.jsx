@@ -1,332 +1,328 @@
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "../components/ui/card";
 import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 
-export default function Planner() {
-  const [trip, setTrip] = useState({
-    title: "My European Adventure",
-    startDate: "2025-05-01",
-    endDate: "2025-05-14",
-    destinations: [
-      { id: 1, name: "Paris, France", days: 3 },
-      { id: 2, name: "Rome, Italy", days: 4 },
-    ],
-  });
-
-  const [itinerary, setItinerary] = useState([
-    {
-      id: 1,
-      day: 1,
-      date: "2025-05-01",
-      location: "Paris, France",
-      activities: [
-        { id: 1, time: "09:00", description: "Visit Eiffel Tower" },
-        { id: 2, time: "13:00", description: "Lunch at Le Jules Verne" },
-        { id: 3, time: "15:00", description: "Louvre Museum" },
-      ],
-    },
-    {
-      id: 2,
-      day: 2,
-      date: "2025-05-02",
-      location: "Paris, France",
-      activities: [
-        { id: 4, time: "10:00", description: "Notre Dame Cathedral" },
-        { id: 5, time: "14:00", description: "Seine River Cruise" },
-      ],
-    },
+const Planner = () => {
+  // State for destinations and itinerary
+  const [searchInput, setSearchInput] = useState("");
+  const [destinations, setDestinations] = useState([
+    { id: 1, name: "Eiffel Tower", location: "Paris, France", type: "Attraction", rating: 4.7, coordinates: { lat: 48.8584, lng: 2.2945 } },
+    { id: 2, name: "Louvre Museum", location: "Paris, France", type: "Museum", rating: 4.8, coordinates: { lat: 48.8606, lng: 2.3376 } },
+    { id: 3, name: "Notre-Dame Cathedral", location: "Paris, France", type: "Church", rating: 4.6, coordinates: { lat: 48.8530, lng: 2.3499 } },
   ]);
+  const [itinerary, setItinerary] = useState([]);
+  const [selectedDestination, setSelectedDestination] = useState(null);
 
-  const [newActivity, setNewActivity] = useState({
-    day: 1,
-    time: "",
-    description: "",
+  // Filters
+  const [filters, setFilters] = useState({
+    type: "all",
+    budget: "all",
+    distance: "all"
   });
 
-  const [newDestination, setNewDestination] = useState({
-    name: "",
-    days: 1,
-  });
-
-  const addActivity = (e) => {
+  const handleSearch = (e) => {
     e.preventDefault();
-    if (newActivity.time && newActivity.description) {
-      const dayIndex = itinerary.findIndex((day) => day.day === parseInt(newActivity.day));
-      if (dayIndex !== -1) {
-        const updatedItinerary = [...itinerary];
-        const newId = Math.max(0, ...updatedItinerary[dayIndex].activities.map((a) => a.id)) + 1;
-        updatedItinerary[dayIndex].activities.push({
-          id: newId,
-          time: newActivity.time,
-          description: newActivity.description,
-        });
-        updatedItinerary[dayIndex].activities.sort((a, b) => a.time.localeCompare(b.time));
-        setItinerary(updatedItinerary);
-        setNewActivity({ ...newActivity, time: "", description: "" });
-      }
+    console.log("Searching for:", searchInput);
+    // Normally you would fetch data from an API here
+  };
+
+  const addToItinerary = (destination) => {
+    if (!itinerary.some(item => item.id === destination.id)) {
+      setItinerary([...itinerary, destination]);
     }
   };
 
-  const addDestination = (e) => {
-    e.preventDefault();
-    if (newDestination.name && newDestination.days > 0) {
-      const newId = Math.max(0, ...trip.destinations.map((d) => d.id)) + 1;
-      setTrip({
-        ...trip,
-        destinations: [
-          ...trip.destinations,
-          { id: newId, name: newDestination.name, days: parseInt(newDestination.days) },
-        ],
-      });
-
-      // Create empty days in the itinerary for the new destination
-      const lastDay = itinerary.length > 0 ? itinerary[itinerary.length - 1] : { day: 0, date: trip.startDate };
-      const newDays = [];
-
-      for (let i = 1; i <= newDestination.days; i++) {
-        const newDay = {
-          id: itinerary.length + i,
-          day: lastDay.day + i,
-          date: new Date(lastDay.date),
-          location: newDestination.name,
-          activities: [],
-        };
-        // Increment the date
-        newDay.date.setDate(newDay.date.getDate() + i);
-        newDay.date = newDay.date.toISOString().split('T')[0];
-        newDays.push(newDay);
-      }
-
-      setItinerary([...itinerary, ...newDays]);
-      setNewDestination({ name: "", days: 1 });
-    }
+  const removeFromItinerary = (id) => {
+    setItinerary(itinerary.filter(item => item.id !== id));
   };
 
-  const removeActivity = (dayId, activityId) => {
-    const dayIndex = itinerary.findIndex((day) => day.id === dayId);
-    if (dayIndex !== -1) {
-      const updatedItinerary = [...itinerary];
-      updatedItinerary[dayIndex].activities = updatedItinerary[dayIndex].activities.filter(
-        (activity) => activity.id !== activityId
-      );
-      setItinerary(updatedItinerary);
+  const moveItem = (index, direction) => {
+    const newItinerary = [...itinerary];
+    if (direction === "up" && index > 0) {
+      [newItinerary[index], newItinerary[index - 1]] = [newItinerary[index - 1], newItinerary[index]];
+    } else if (direction === "down" && index < itinerary.length - 1) {
+      [newItinerary[index], newItinerary[index + 1]] = [newItinerary[index + 1], newItinerary[index]];
     }
+    setItinerary(newItinerary);
+  };
+
+  const exportItinerary = () => {
+    console.log("Exporting itinerary:", itinerary);
+    // Export functionality would go here
+  };
+
+  const handleFilterChange = (key, value) => {
+    setFilters({ ...filters, [key]: value });
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Trip Details and Destinations */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold text-blue-700">Trip Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Trip Title</label>
-                  <input
-                    type="text"
-                    className="w-full p-2 border rounded-md"
-                    value={trip.title}
-                    onChange={(e) => setTrip({ ...trip, title: e.target.value })}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Start Date</label>
-                    <input
-                      type="date"
-                      className="w-full p-2 border rounded-md"
-                      value={trip.startDate}
-                      onChange={(e) => setTrip({ ...trip, startDate: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">End Date</label>
-                    <input
-                      type="date"
-                      className="w-full p-2 border rounded-md"
-                      value={trip.endDate}
-                      onChange={(e) => setTrip({ ...trip, endDate: e.target.value })}
-                    />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex flex-col md:flex-row h-[calc(100vh-64px)]">
+        {/* Left Side - Interactive Map */}
+        <div className="w-full md:w-1/2 h-1/2 md:h-full bg-white p-4 overflow-y-auto">
+          <div className="bg-gray-200 rounded-lg mb-4 p-4 h-64 md:h-96 flex items-center justify-center">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold mb-2">Interactive Map</h3>
+              <p className="text-gray-600 text-sm">
+                Google Maps would be integrated here to search and select destinations.
+              </p>
+            </div>
+          </div>
 
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold text-blue-700">Destinations</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {trip.destinations.map((destination) => (
-                  <div key={destination.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                    <div>
-                      <p className="font-medium">{destination.name}</p>
-                      <p className="text-sm text-gray-500">{destination.days} days</p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        // You could add edit functionality here
-                        console.log("Edit destination:", destination);
-                      }}
-                      className="text-xs"
-                    >
-                      Edit
-                    </Button>
-                  </div>
-                ))}
-              </div>
 
-              <form onSubmit={addDestination} className="mt-4 pt-4 border-t">
-                <h3 className="font-medium mb-2">Add New Destination</h3>
-                <div className="space-y-3">
+
+          {/* Search Results */}
+          <div className="space-y-3">
+            <h3 className="font-semibold text-lg">Search Results</h3>
+            {destinations.map(destination => (
+              <div
+                key={destination.id}
+                className={`p-3 border rounded-lg cursor-pointer transition-colors ${selectedDestination?.id === destination.id ? 'bg-blue-50 border-blue-300' : 'bg-white hover:bg-gray-50'
+                  }`}
+                onClick={() => setSelectedDestination(destination)}
+              >
+                <div className="flex justify-between items-start">
                   <div>
-                    <input
-                      type="text"
-                      placeholder="Destination name"
-                      className="w-full p-2 border rounded-md"
-                      value={newDestination.name}
-                      onChange={(e) => setNewDestination({ ...newDestination, name: e.target.value })}
-                      required
-                    />
+                    <h4 className="font-medium">{destination.name}</h4>
+                    <p className="text-sm text-gray-600">{destination.location}</p>
+                    <p className="text-sm text-gray-500">{destination.type} • Rating: {destination.rating}</p>
                   </div>
-                  <div>
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder="Number of days"
-                      className="w-full p-2 border rounded-md"
-                      value={newDestination.days}
-                      onChange={(e) => setNewDestination({ ...newDestination, days: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <Button type="submit" className="w-full">
-                    Add Destination
+                  <Button
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToItinerary(destination);
+                    }}
+                    className="mt-1"
+                  >
+                    Add
                   </Button>
                 </div>
-              </form>
-            </CardContent>
-          </Card>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Itinerary */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="shadow-md">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-xl font-semibold text-blue-700">Daily Itinerary</CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  // Export functionality would go here
-                  console.log("Export itinerary");
-                }}
-              >
-                Export Itinerary
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {itinerary.map((day) => (
-                  <div key={day.id} className="border rounded-lg overflow-hidden">
-                    <div className="bg-blue-50 p-3 border-b">
-                      <div className="flex justify-between items-center">
-                        <h3 className="font-semibold">
-                          Day {day.day} - {day.location}
-                        </h3>
-                        <span className="text-sm text-gray-500">{day.date}</span>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      {day.activities.length > 0 ? (
-                        <div className="space-y-3">
-                          {day.activities.map((activity) => (
-                            <div key={activity.id} className="flex items-start">
-                              <div className="w-20 font-medium text-blue-600">{activity.time}</div>
-                              <div className="flex-grow">
-                                <p>{activity.description}</p>
-                              </div>
-                              <button
-                                onClick={() => removeActivity(day.id, activity.id)}
-                                className="text-red-500 hover:text-red-700"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-gray-500 text-center py-6">No activities planned for this day.</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+        {/* Right Side - Editable Itinerary List */}
+        <div className="w-full md:w-1/2 h-1/2 md:h-full bg-gray-100 p-4 overflow-y-auto">
 
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold text-blue-700">Add Activity</CardTitle>
+          {/* Search Destinations */}
+          <Card className="mb-4">
+            <CardHeader className="pb-3">
+              <CardTitle>Search Destinations</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={addActivity} className="space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Day</label>
-                    <select
-                      className="w-full p-2 border rounded-md"
-                      value={newActivity.day}
-                      onChange={(e) => setNewActivity({ ...newActivity, day: e.target.value })}
-                      required
-                    >
-                      {itinerary.map((day) => (
-                        <option key={day.id} value={day.day}>
-                          Day {day.day} - {day.location}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Time</label>
-                    <input
-                      type="time"
-                      className="w-full p-2 border rounded-md"
-                      value={newActivity.time}
-                      onChange={(e) => setNewActivity({ ...newActivity, time: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="col-span-3 md:col-span-1">
-                    <label className="block text-sm font-medium mb-1">Activity</label>
-                    <input
-                      type="text"
-                      placeholder="Description"
-                      className="w-full p-2 border rounded-md"
-                      value={newActivity.description}
-                      onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })}
-                      required
-                    />
-                  </div>
+              <form onSubmit={handleSearch} className="space-y-3">
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Search for destinations, attractions, etc."
+                    className="w-full p-2 border rounded-md"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                  />
                 </div>
-                <Button type="submit" className="w-full">
-                  Add Activity
+                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+                  Search
                 </Button>
               </form>
             </CardContent>
           </Card>
+
+          {/* Filter Options */}
+          <Card className="mb-4">
+            <CardHeader className="pb-3">
+              <CardTitle>Filter Options</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* Flex container for row layout */}
+              <div className="flex flex-wrap gap-4">
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-sm font-medium mb-1">Activity Type</label>
+                  <select
+                    className="w-full p-2 border rounded-md"
+                    value={filters.type}
+                    onChange={(e) => handleFilterChange("type", e.target.value)}
+                  >
+                    <option value="all">All Types</option>
+                    <option value="attraction">Attractions</option>
+                    <option value="restaurant">Restaurants</option>
+                    <option value="hotel">Hotels</option>
+                    <option value="museum">Museums</option>
+                    <option value="park">Parks</option>
+                  </select>
+                </div>
+
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-sm font-medium mb-1">Budget</label>
+                  <select
+                    className="w-full p-2 border rounded-md"
+                    value={filters.budget}
+                    onChange={(e) => handleFilterChange("budget", e.target.value)}
+                  >
+                    <option value="all">All Budgets</option>
+                    <option value="budget">Budget-Friendly</option>
+                    <option value="mid">Mid-Range</option>
+                    <option value="luxury">Luxury</option>
+                  </select>
+                </div>
+
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-sm font-medium mb-1">Distance</label>
+                  <select
+                    className="w-full p-2 border rounded-md"
+                    value={filters.distance}
+                    onChange={(e) => handleFilterChange("distance", e.target.value)}
+                  >
+                    <option value="all">Any Distance</option>
+                    <option value="1">Within 1 km</option>
+                    <option value="5">Within 5 km</option>
+                    <option value="10">Within 10 km</option>
+                    <option value="20">Within 20 km</option>
+                  </select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+
+          <Card className="mb-4">
+            <CardHeader className="pb-3">
+              <div className="flex justify-between items-center">
+                <CardTitle>Your Itinerary</CardTitle>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setItinerary([])}
+                    className="text-xs"
+                  >
+                    Clear All
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={exportItinerary}
+                    className="bg-blue-600 hover:bg-blue-700 text-xs"
+                  >
+                    Export PDF
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {itinerary.length > 0 ? (
+                <div className="space-y-3">
+                  {itinerary.map((item, index) => (
+                    <div key={item.id} className="p-3 bg-white rounded-lg border">
+                      <div className="flex justify-between">
+                        <div>
+                          <h4 className="font-medium">{item.name}</h4>
+                          <p className="text-sm text-gray-600">{item.location}</p>
+                        </div>
+                        <div className="flex items-start space-x-1">
+                          <button
+                            onClick={() => moveItem(index, "up")}
+                            className="p-1 text-gray-500 hover:text-blue-600 disabled:opacity-30"
+                            disabled={index === 0}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => moveItem(index, "down")}
+                            className="p-1 text-gray-500 hover:text-blue-600 disabled:opacity-30"
+                            disabled={index === itinerary.length - 1}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => removeFromItinerary(item.id)}
+                            className="p-1 text-gray-500 hover:text-red-600"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-10 text-gray-500">
+                  <p>Your itinerary is empty. Add destinations from the map or search results.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {itinerary.length > 0 && (
+            <Card className="mb-4">
+              <CardHeader className="pb-3">
+                <CardTitle>Itinerary Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center px-3 py-2 bg-gray-50 rounded-md">
+                    <span className="font-medium">Total Destinations:</span>
+                    <span>{itinerary.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center px-3 py-2 bg-gray-50 rounded-md">
+                    <span className="font-medium">Estimated Time:</span>
+                    <span>{itinerary.length * 2} hours</span>
+                  </div>
+                  <div className="flex justify-between items-center px-3 py-2 bg-gray-50 rounded-md">
+                    <span className="font-medium">Total Distance:</span>
+                    <span>~{Math.floor(Math.random() * 20) + 5} km</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {selectedDestination && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle>Destination Details</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-lg">{selectedDestination.name}</h3>
+                  <p className="text-gray-600">{selectedDestination.location}</p>
+                  <div className="bg-gray-200 h-40 rounded-md flex items-center justify-center">
+                    <p className="text-gray-600 text-sm">Destination image would appear here</p>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi.
+                    Sed euismod, eros vel bibendum lacinia, nisi nunc aliquam nunc, vitae aliquam
+                    nunc nisi vel nunc.
+                  </p>
+                  <div className="flex justify-between items-center pt-2">
+                    <Button
+                      variant="outline"
+                      className="w-1/2 mr-2"
+                      onClick={() => window.location.href = `/destination/${selectedDestination.id}`}
+                    >
+                      View Details
+                    </Button>
+                    <Button
+                      className="w-1/2 ml-2 bg-blue-600 hover:bg-blue-700"
+                      onClick={() => addToItinerary(selectedDestination)}
+                    >
+                      Add to Itinerary
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Planner;

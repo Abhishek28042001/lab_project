@@ -1,112 +1,234 @@
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../components/ui/card";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import { Link } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../components/ui/card";
+import { authService } from '../services/authService';
 
-export default function Login() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+const Login = () => {
+  const navigate = useNavigate();
+  const [loginType, setLoginType] = useState('password'); // 'password' or 'otp'
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    phone_number: "",
+    otp: "",
+    rememberMe: false
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handlePasswordLogin = async (e) => {
     e.preventDefault();
-    if (isLogin) {
-      console.log("Logging in with:", { email, password });
-      // Add login functionality here
-    } else {
-      console.log("Signing up with:", { name, email, password });
-      // Add signup functionality here
+    setError('');
+    setLoading(true);
+
+    try {
+      const credentials = {
+        email: formData.email,
+        password: formData.password,
+      };
+
+      const response = await authService.login(credentials);
+
+      if (response.access) {
+        navigate('/dashboard');
+      } else {
+        setError(response.detail || 'Login failed');
+      }
+    } catch (err) {
+      setError('An error occurred during login');
+      console.error('Login error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendOTP = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await authService.loginWithOTP(formData.phone_number);
+
+      if (response.message === 'OTP sent successfully') {
+        setOtpSent(true);
+      } else {
+        setError(response.error || 'Failed to send OTP');
+      }
+    } catch (err) {
+      setError('An error occurred while sending OTP');
+      console.error('OTP error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const otpData = {
+        phone_number: formData.phone_number,
+        otp: formData.otp,
+      };
+
+      const response = await authService.verifyOTP(otpData);
+
+      if (response.access) {
+        navigate('/dashboard');
+      } else {
+        setError(response.error || 'OTP verification failed');
+      }
+    } catch (err) {
+      setError('An error occurred during OTP verification');
+      console.error('OTP verification error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto py-12 px-4">
-      <div className="max-w-md mx-auto">
-        <Card className="shadow-lg">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center text-blue-700">
-              {isLogin ? "Login to Your Account" : "Create an Account"}
-            </CardTitle>
-            <CardDescription className="text-center">
-              {isLogin
-                ? "Enter your email and password to login"
-                : "Enter your details to create an account"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
-                <div className="space-y-2">
-                  <label htmlFor="name" className="text-sm font-medium">
-                    Full Name
-                  </label>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Sign in to your account
+          </h2>
+        </div>
+
+        <div className="flex justify-center space-x-4 mb-6">
+          <button
+            onClick={() => setLoginType('password')}
+            className={`px-4 py-2 rounded-md ${
+              loginType === 'password'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-200 text-gray-700'
+            }`}
+          >
+            Password Login
+          </button>
+          <button
+            onClick={() => setLoginType('otp')}
+            className={`px-4 py-2 rounded-md ${
+              loginType === 'otp'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-200 text-gray-700'
+            }`}
+          >
+            OTP Login
+          </button>
+        </div>
+
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+
+        {loginType === 'password' ? (
+          <form className="mt-8 space-y-6" onSubmit={handlePasswordLogin}>
+            <div className="rounded-md shadow-sm -space-y-px">
+              <div>
+                <label htmlFor="email" className="sr-only">Email address</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  placeholder="Email address"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </div>
+              <div>
+                <label htmlFor="password" className="sr-only">Password</label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                {loading ? 'Signing in...' : 'Sign in'}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form className="mt-8 space-y-6" onSubmit={otpSent ? handleVerifyOTP : handleSendOTP}>
+            <div className="rounded-md shadow-sm -space-y-px">
+              <div>
+                <label htmlFor="phone_number" className="sr-only">Phone number</label>
+                <input
+                  id="phone_number"
+                  name="phone_number"
+                  type="tel"
+                  required
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  placeholder="Phone number"
+                  value={formData.phone_number}
+                  onChange={handleChange}
+                />
+              </div>
+              {otpSent && (
+                <div>
+                  <label htmlFor="otp" className="sr-only">OTP</label>
                   <input
-                    id="name"
+                    id="otp"
+                    name="otp"
                     type="text"
-                    placeholder="John Doe"
-                    className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required={!isLogin}
+                    required
+                    className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    placeholder="Enter OTP"
+                    value={formData.otp}
+                    onChange={handleChange}
                   />
                 </div>
               )}
+            </div>
 
-              <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700"
-              >
-                {isLogin ? "Login" : "Sign Up"}
-              </Button>
-            </form>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4 mt-4">
-            <div className="text-sm text-center text-gray-600">
-              {isLogin ? "Don't have an account?" : "Already have an account?"}
+            <div>
               <button
-                className="ml-1 text-blue-600 hover:underline font-medium"
-                onClick={() => setIsLogin(!isLogin)}
+                type="submit"
+                disabled={loading}
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
-                {isLogin ? "Sign Up" : "Login"}
+                {loading
+                  ? 'Processing...'
+                  : otpSent
+                  ? 'Verify OTP'
+                  : 'Send OTP'}
               </button>
             </div>
-            <Link to="/" className="text-sm text-center text-blue-600 hover:underline">
-              Go back to home
-            </Link>
-          </CardFooter>
-        </Card>
+          </form>
+        )}
       </div>
     </div>
   );
-}
+};
+
+export default Login;
