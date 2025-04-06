@@ -2,16 +2,19 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../components/ui/card";
+import { API_ENDPOINTS } from '../api/config';
+
 
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    first_name: "",
+    last_name: "",
     email: "",
     password: "",
+    username:"",
     confirmPassword: "",
-    contactNumber: "",
+    phone_number: "",
     acceptTerms: false
   });
 
@@ -39,13 +42,13 @@ const Register = () => {
     const newErrors = {};
 
     // First name validation
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = "First name is required";
+    if (!formData.first_name.trim()) {
+      newErrors.first_name = "First name is required";
     }
 
     // Last name validation
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = "Last name is required";
+    if (!formData.last_name.trim()) {
+      newErrors.last_name = "Last name is required";
     }
 
     // Email validation
@@ -53,6 +56,13 @@ const Register = () => {
       newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Email address is invalid";
+    }
+
+    // Username validation
+    if (!formData.username) {
+      newErrors.username = "username is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.username)) {
+      newErrors.username = "username is invalid";
     }
 
     // Password validation
@@ -73,10 +83,10 @@ const Register = () => {
     }
 
     // Contact number validation
-    if (!formData.contactNumber.trim()) {
-      newErrors.contactNumber = "Contact number is required";
-    } else if (!/^\d{10}$/.test(formData.contactNumber)) {
-      newErrors.contactNumber = "Enter a valid 10-digit mobile number";
+    if (!formData.phone_number.trim()) {
+      newErrors.phone_number = "Contact number is required";
+    } else if (!/^\d{10}$/.test(formData.phone_number)) {
+      newErrors.phone_number = "Enter a valid 10-digit mobile number";
     }
 
     // Terms and conditions validation
@@ -111,6 +121,31 @@ const Register = () => {
     }, 1500);
   };
 
+  const handleRegister = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch(API_ENDPOINTS.REGISTER, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        navigate('/home');
+      } else {
+        const data = await response.json();
+        console.error("Registration failed:", data);
+        alert("Registration failed: " + (data.detail || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Registration failed:", error);
+    }
+  };
+  
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -131,46 +166,46 @@ const Register = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleRegister} className="space-y-6">
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">
                     First name
                   </label>
                   <div className="mt-1">
                     <input
-                      id="firstName"
-                      name="firstName"
+                      id="first_name"
+                      name="first_name"
                       type="text"
                       autoComplete="given-name"
-                      value={formData.firstName}
+                      value={formData.first_name}
                       onChange={handleInputChange}
-                      className={`appearance-none block w-full px-3 py-2 border ${errors.firstName ? "border-red-300" : "border-gray-300"
+                      className={`appearance-none block w-full px-3 py-2 border ${errors.first_name ? "border-red-300" : "border-gray-300"
                         } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                     />
-                    {errors.firstName && (
-                      <p className="mt-2 text-sm text-red-600">{errors.firstName}</p>
+                    {errors.first_name && (
+                      <p className="mt-2 text-sm text-red-600">{errors.first_name}</p>
                     )}
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
                     Last name
                   </label>
                   <div className="mt-1">
                     <input
-                      id="lastName"
-                      name="lastName"
+                      id="last_name"
+                      name="last_name"
                       type="text"
                       autoComplete="family-name"
-                      value={formData.lastName}
+                      value={formData.last_name}
                       onChange={handleInputChange}
-                      className={`appearance-none block w-full px-3 py-2 border ${errors.lastName ? "border-red-300" : "border-gray-300"
+                      className={`appearance-none block w-full px-3 py-2 border ${errors.last_name ? "border-red-300" : "border-gray-300"
                         } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                     />
-                    {errors.lastName && (
-                      <p className="mt-2 text-sm text-red-600">{errors.lastName}</p>
+                    {errors.last_name && (
+                      <p className="mt-2 text-sm text-red-600">{errors.last_name}</p>
                     )}
                   </div>
                 </div>
@@ -193,6 +228,26 @@ const Register = () => {
                   />
                   {errors.email && (
                     <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                   Username
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="username"
+                    name="username"
+                    type="username"
+                    autoComplete="username"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    className={`appearance-none block w-full px-3 py-2 border ${errors.username ? "border-red-300" : "border-gray-300"
+                      } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                  />
+                  {errors.username && (
+                    <p className="mt-2 text-sm text-red-600">{errors.username}</p>
                   )}
                 </div>
               </div>
@@ -240,21 +295,21 @@ const Register = () => {
               </div>
 
               <div>
-                <label htmlFor="contactNumber" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700">
                   Contact Number
                 </label>
                 <div className="mt-1">
                   <input
-                    id="contactNumber"
-                    name="contactNumber"
+                    id="phone_number"
+                    name="phone_number"
                     type="tel"
-                    value={formData.contactNumber}
+                    value={formData.phone_number}
                     onChange={handleInputChange}
-                    className={`appearance-none block w-full px-3 py-2 border ${errors.contactNumber ? "border-red-300" : "border-gray-300"
+                    className={`appearance-none block w-full px-3 py-2 border ${errors.phone_number ? "border-red-300" : "border-gray-300"
                       } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                   />
-                  {errors.contactNumber && (
-                    <p className="mt-2 text-sm text-red-600">{errors.contactNumber}</p>
+                  {errors.phone_number && (
+                    <p className="mt-2 text-sm text-red-600">{errors.phone_number}</p>
                   )}
                 </div>
               </div>

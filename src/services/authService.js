@@ -1,4 +1,19 @@
-import { API_ENDPOINTS, getHeaders } from '../config/api';
+import { API_ENDPOINTS } from '../api/config';
+
+const getHeaders = (authenticated = false) => {
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  if (authenticated) {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
+  return headers;
+};
 
 export const authService = {
   // Register a new user
@@ -28,7 +43,7 @@ export const authService = {
 
   // Login with OTP
   loginWithOTP: async (phoneNumber) => {
-    const response = await fetch(API_ENDPOINTS.LOGIN_WITH_OTP, {
+    const response = await fetch(API_ENDPOINTS.LOGIN_OTP, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify({ phone_number: phoneNumber }),
@@ -38,7 +53,7 @@ export const authService = {
 
   // Verify OTP
   verifyOTP: async (otpData) => {
-    const response = await fetch(API_ENDPOINTS.VERIFY_OTP, {
+    const response = await fetch(API_ENDPOINTS.LOGIN_OTP_VERIFY, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify(otpData),
