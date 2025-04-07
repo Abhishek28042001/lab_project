@@ -124,6 +124,10 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
 
+    // Clear any previous success/error messages
+    setErrors({});
+    setIsSubmitting(true);
+
     try {
       const response = await fetch(API_ENDPOINTS.REGISTER, {
         method: 'POST',
@@ -135,14 +139,23 @@ const Register = () => {
       });
 
       if (response.ok) {
-        navigate('/home');
+        // Show success message
+        alert("Registration successful! Redirecting to login page...");
+
+        // Redirect to login page after a short delay
+        setTimeout(() => {
+          navigate('/login');
+        }, 1500);
       } else {
         const data = await response.json();
         console.error("Registration failed:", data);
         alert("Registration failed: " + (data.detail || "Unknown error"));
+        setIsSubmitting(false);
       }
     } catch (error) {
       console.error("Registration failed:", error);
+      alert("Registration failed: Network error");
+      setIsSubmitting(false);
     }
   };
 

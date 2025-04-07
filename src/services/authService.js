@@ -24,7 +24,15 @@ export const authService = {
       body: JSON.stringify(userData),
       credentials: 'include',
     });
-    return response.json();
+
+    const data = await response.json();
+
+    // Add success property based on the response status
+    if (response.ok) {
+      return { ...data, success: true };
+    } else {
+      return { ...data, success: false };
+    }
   },
 
   // Login with email and password

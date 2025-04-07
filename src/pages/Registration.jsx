@@ -11,6 +11,7 @@ const Registration = () => {
     confirmPassword: '',
   });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -24,6 +25,7 @@ const Registration = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
@@ -42,7 +44,11 @@ const Registration = () => {
       const response = await authService.register(userData);
 
       if (response.success) {
-        navigate('/login');
+        setSuccess('Registration successful! Redirecting to login...');
+        // Redirect after a short delay for better UX
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
       } else {
         setError(response.message || 'Registration failed');
       }
@@ -66,6 +72,11 @@ const Registration = () => {
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
               <span className="block sm:inline">{error}</span>
+            </div>
+          )}
+          {success && (
+            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+              <span className="block sm:inline">{success}</span>
             </div>
           )}
           <div className="rounded-md shadow-sm -space-y-px">
