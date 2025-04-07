@@ -3,7 +3,9 @@ const BASE_URL = 'https://api.openweathermap.org/data/2.5/weather';
 
 export const fetchWeather = async (city = 'Delhi') => {
   try {
-    const response = await fetch(`${BASE_URL}?q=${city}&appid=${WEATHER_API_KEY}&units=metric`);
+    const response = await fetch(`${BASE_URL}?q=${city}&appid=${WEATHER_API_KEY}&units=metric`, {
+      credentials: 'include',
+    });
 
     if (!response.ok) throw new Error('Failed to fetch weather data');
     return await response.json();

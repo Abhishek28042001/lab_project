@@ -12,7 +12,9 @@ const DestinationWeather = ({ city }) => {
 
     const fetchWeather = async () => {
       try {
-        const response = await fetch(API_URL);
+        const response = await fetch(API_URL, {
+          credentials: 'include',
+        });
         const data = await response.json();
 
         if (response.ok) {

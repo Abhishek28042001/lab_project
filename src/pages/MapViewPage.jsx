@@ -1,6 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
+
+// Map container style
+const containerStyle = {
+  width: '100%',
+  height: '70vh',
+  borderRadius: '0.375rem'
+};
+
+// Default center (Paris)
+const defaultCenter = {
+  lat: 48.8584,
+  lng: 2.2945
+};
+
+// Hardcoded API key - make sure to replace with your actual key in a production environment
+const GOOGLE_MAPS_API_KEY = "AIzaSyABRMx8ApHg9lEBO51RuXY9jATJh3PajTY";
 
 export default function MapViewPage() {
   const [searchInput, setSearchInput] = useState("");
@@ -9,13 +26,53 @@ export default function MapViewPage() {
     { id: 2, name: "Colosseum, Rome", coordinates: { lat: 41.8902, lng: 12.4922 } },
   ]);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [map, setMap] = useState(null);
+  const [activeMarker, setActiveMarker] = useState(null);
+  const [debugInfo, setDebugInfo] = useState("");
+
+  // Load the Google Maps API
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY // Use the hardcoded key
+  });
+
+  useEffect(() => {
+    // Debug logging
+    console.log("Environment variable:", process.env.REACT_APP_GOOGLE_MAPS_API_KEY);
+    console.log("Hardcoded key:", GOOGLE_MAPS_API_KEY);
+    console.log("Is Google Maps loaded:", isLoaded);
+    console.log("Google Maps load error:", loadError);
+
+    if (loadError) {
+      setDebugInfo(`Error loading map: ${loadError.message}`);
+    } else if (isLoaded) {
+      setDebugInfo("Map loaded successfully!");
+    } else {
+      setDebugInfo("Map is loading...");
+    }
+  }, [isLoaded, loadError]);
+
+  const mapRef = useRef(null);
+
+  const onMapLoad = useCallback((map) => {
+    mapRef.current = map;
+    setMap(map);
+    console.log("Map loaded successfully!");
+  }, []);
+
+  const onUnmount = useCallback((map) => {
+    mapRef.current = null;
+    setMap(null);
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
     console.log("Searching for:", searchInput);
-    // Normally you would make an API call to a geocoding service
-    // But for demonstration, let's just add a dummy location
+    // In a real implementation, you would use the Geocoding API:
+    // https://developers.google.com/maps/documentation/geocoding/overview
+
     if (searchInput.trim()) {
+      // For demonstration, adding dummy location
       const newLocation = {
         id: savedLocations.length + 1,
         name: searchInput,
@@ -23,11 +80,24 @@ export default function MapViewPage() {
       };
       setSavedLocations([...savedLocations, newLocation]);
       setSearchInput("");
-      setSelectedLocation(newLocation);
+      selectLocation(newLocation);
     }
   };
 
   const selectLocation = (location) => {
+    setSelectedLocation(location);
+    setActiveMarker(location.id);
+
+    // Center the map on the selected location
+    if (mapRef.current) {
+      mapRef.current.panTo(location.coordinates);
+      mapRef.current.setZoom(14);
+    }
+  };
+
+  const handleMarkerClick = (id) => {
+    setActiveMarker(id);
+    const location = savedLocations.find(loc => loc.id === id);
     setSelectedLocation(location);
   };
 
@@ -92,29 +162,57 @@ export default function MapViewPage() {
         <div className="md:col-span-2">
           <Card className="shadow-md h-full">
             <CardContent className="p-0">
-              <div className="bg-gray-200 rounded-md h-[70vh] flex items-center justify-center">
-                <div className="text-center p-6">
-                  <h3 className="text-xl font-bold text-gray-700 mb-2">Interactive Map</h3>
-                  <p className="text-gray-600 mb-4">
-                    {selectedLocation ? (
-                      <>
-                        Viewing: <span className="font-semibold">{selectedLocation.name}</span>
-                        <br />
-                        <span className="text-sm">
-                          Coordinates: {selectedLocation.coordinates.lat.toFixed(4)}, {selectedLocation.coordinates.lng.toFixed(4)}
-                        </span>
-                      </>
-                    ) : (
-                      "Select a location from the list or search for a new one."
-                    )}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    This is a placeholder for the Google Maps component.
-                    <br />
-                    In a real application, you would integrate with Google Maps API here.
-                  </p>
+              {debugInfo && (
+                <div className="bg-blue-100 p-2 text-blue-700 text-sm">
+                  Debug: {debugInfo}
                 </div>
-              </div>
+              )}
+
+              {loadError && (
+                <div className="bg-red-100 p-4 rounded-md text-red-700">
+                  Error loading Google Maps API: {loadError.message}
+                </div>
+              )}
+
+              {!isLoaded && (
+                <div className="bg-gray-200 rounded-md h-[70vh] flex items-center justify-center">
+                  <p className="text-gray-600">Loading maps...</p>
+                </div>
+              )}
+
+              {isLoaded && (
+                <GoogleMap
+                  mapContainerStyle={containerStyle}
+                  center={selectedLocation ? selectedLocation.coordinates : defaultCenter}
+                  zoom={selectedLocation ? 14 : 10}
+                  onLoad={onMapLoad}
+                  onUnmount={onUnmount}
+                  options={{
+                    streetViewControl: true,
+                    mapTypeControl: true,
+                    fullscreenControl: true,
+                  }}
+                >
+                  {savedLocations.map(location => (
+                    <Marker
+                      key={location.id}
+                      position={location.coordinates}
+                      onClick={() => handleMarkerClick(location.id)}
+                    >
+                      {activeMarker === location.id && (
+                        <InfoWindow onCloseClick={() => setActiveMarker(null)}>
+                          <div>
+                            <h3 className="font-medium">{location.name}</h3>
+                            <p className="text-sm text-gray-600">
+                              Lat: {location.coordinates.lat.toFixed(4)}, Lng: {location.coordinates.lng.toFixed(4)}
+                            </p>
+                          </div>
+                        </InfoWindow>
+                      )}
+                    </Marker>
+                  ))}
+                </GoogleMap>
+              )}
             </CardContent>
           </Card>
         </div>

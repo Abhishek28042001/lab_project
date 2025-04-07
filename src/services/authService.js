@@ -6,7 +6,7 @@ const getHeaders = (authenticated = false) => {
   };
 
   if (authenticated) {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access');
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
@@ -22,6 +22,7 @@ export const authService = {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify(userData),
+      credentials: 'include',
     });
     return response.json();
   },
@@ -32,11 +33,12 @@ export const authService = {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify(credentials),
+      credentials: 'include',
     });
     const data = await response.json();
     if (data.access) {
-      localStorage.setItem('token', data.access);
-      localStorage.setItem('refreshToken', data.refresh);
+      localStorage.setItem('access', data.access);
+      localStorage.setItem('refresh', data.refresh);
     }
     return data;
   },
@@ -47,6 +49,7 @@ export const authService = {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify({ phone_number: phoneNumber }),
+      credentials: 'include',
     });
     return response.json();
   },
@@ -57,38 +60,41 @@ export const authService = {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify(otpData),
+      credentials: 'include',
     });
     const data = await response.json();
     if (data.access) {
-      localStorage.setItem('token', data.access);
-      localStorage.setItem('refreshToken', data.refresh);
+      localStorage.setItem('access', data.access);
+      localStorage.setItem('refresh', data.refresh);
     }
     return data;
   },
 
   // Get user profile
   getProfile: async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access');
     const response = await fetch(API_ENDPOINTS.PROFILE, {
-      headers: getHeaders(token),
+      headers: getHeaders(true),
+      credentials: 'include',
     });
     return response.json();
   },
 
   // Update user profile
   updateProfile: async (profileData) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access');
     const response = await fetch(API_ENDPOINTS.PROFILE, {
       method: 'PUT',
-      headers: getHeaders(token),
+      headers: getHeaders(true),
       body: JSON.stringify(profileData),
+      credentials: 'include',
     });
     return response.json();
   },
 
   // Logout
   logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('access');
+    localStorage.removeItem('refresh');
   },
 };

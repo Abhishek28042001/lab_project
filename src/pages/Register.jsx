@@ -131,6 +131,7 @@ const Register = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -144,7 +145,7 @@ const Register = () => {
       console.error("Registration failed:", error);
     }
   };
-  
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">

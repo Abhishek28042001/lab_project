@@ -48,8 +48,8 @@ const Login = () => {
       const response = await authService.login(credentials);
 
       if (response.access) {
-        localStorage.setItem("access_token", response.access);
-        localStorage.setItem("refresh_token", response.refresh);
+        localStorage.setItem("access", response.access);
+        localStorage.setItem("refresh", response.refresh);
         navigate("/dashboard");
       } else {
         setError(response.detail || "Login failed");
@@ -97,8 +97,8 @@ const Login = () => {
       const response = await authService.verifyOTP(otpData);
 
       if (response.access) {
-        localStorage.setItem("access_token", response.access);
-        localStorage.setItem("refresh_token", response.refresh);
+        localStorage.setItem("access", response.access);
+        localStorage.setItem("refresh", response.refresh);
         navigate("/dashboard");
       } else {
         setError(response.error || "OTP verification failed");

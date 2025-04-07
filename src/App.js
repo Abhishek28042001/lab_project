@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
+import MapViewPage from "./pages/MapViewPage";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
@@ -31,6 +32,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/help" element={<Help />} />
+            <Route path="/map" element={<MapViewPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>

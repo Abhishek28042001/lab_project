@@ -8,6 +8,7 @@ export const fetchRestaurants = async (location = 'New York') => {
         Authorization: `Bearer ${YELP_API_KEY}`,
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
     });
 
     if (!response.ok) throw new Error('Failed to fetch Yelp data');
